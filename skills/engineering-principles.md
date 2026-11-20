@@ -1,0 +1,33 @@
+# General engineering principles
+
+Apply the checks relevant to the change. During design, use actual callers and the proposed contracts. During implementation and review, inspect the diff and run focused checks where behaviour is at stake. For a consequential decision or finding, cite the file, symbol, or test and explain what it demonstrates. Record material gaps in the existing plan or review when a check cannot yet be performed.
+
+1. **Give consistency and clarity priority when choosing between correct designs.** Compare the proposal with the nearest maintained example in the same subsystem. Check whether a maintainer can use the same vocabulary, ownership rules, and error conventions to understand both. Then trace a representative call from entry to result, including a failure path. Identify any behaviour the reader must infer from hidden state or ordering. Prefer the familiar approach when that trace is clear. If the established pattern obscures an important step, make the smallest departure that exposes it and point to the step it clarifies. Elegance, brevity, or speculative flexibility alone is insufficient reason to introduce a second pattern.
+
+2. **Choose the simplest design that meets the requirement.** Compare the proposal with extending the nearest existing implementation. For each new layer or abstraction, name the confirmed behaviour or existing contract that the simpler option cannot support, or the concrete maintenance problem it would create. Among equally clear and consistent options, choose the one with fewer concepts for a maintainer to learn.
+
+3. **Keep responsibilities cohesive (single responsibility).** For a changed module, identify the decisions it owns and who or what drives each one. Trace a change to one decision through the affected functions. If it forces edits to unrelated policy owned elsewhere, identify the coupling and consider a split. Keep operations together when they maintain the same invariant.
+
+4. **Extend at an established point of variation (open–closed).** When adding a variant, trace an existing variant from selection to execution. Compare the files each variant needs. Registration or composition edits are expected. Repeated edits to otherwise identical callers to select the new case suggest a missed extension point. Check for a supported variation before introducing one.
+
+5. **Preserve substitutability (Liskov substitution).** Pick a caller that accepts the shared contract. Exercise the same valid input and a relevant failure case against the changed implementation and the contract's expectations. Check results, side effects, and errors the caller relies on. A stricter input requirement, weaker guarantee, or implementation-specific workaround identifies a contract mismatch.
+
+6. **Keep interfaces focused on their consumers (interface segregation).** Map the changed operations to callers that use them and implementations that supply them. Look for a client forced to depend on an unrelated operation or an implementation forced to stub a required method. Before splitting the contract, identify the caller or implementation that the split would free from that dependency.
+
+7. **Depend on stable interfaces at replaceable boundaries (dependency inversion).** Trace the consumer's imports, constructor or function parameters, and the site that selects the concrete implementation. Check whether a test substitute or another supported implementation can be supplied there while the consumer stays unchanged. A concrete import, construction, or type check inside the consumer that must change with the provider exposes remaining coupling.
+
+8. **Use names that reveal intent.** Read a changed call site without opening the implementation. Predict the operation, the meaning of its arguments, and the result from the names and surrounding code. Compare that reading with the implementation and terminology used by neighbouring callers. Rename when the two readings disagree or one term denotes different concepts.
+
+9. **Use comments to explain constraints or decisions.** For each added comment, identify what a maintainer learns beyond the adjacent statement. Keep a rationale, invariant, or contract detail after checking it against its source. If a comment only paraphrases the operation, see whether a clearer name lets you remove it.
+
+10. **Prefer early returns for terminal failures.** Trace the success path and each failed precondition. If failure ends the operation and the remaining work is nested inside a success branch, use a guard clause to flatten it. Trace each new exit past acquired resources and pending writes to verify that cleanup and rollback still run where required.
+
+11. **Give helpers a coherent purpose.** At the call site, describe the step represented by an extraction and check that its name accounts for its effects. Inline it mentally. If inlining makes a short sequence easier to follow and the helper owns no distinct decision, invariant, or reused operation, keep the sequence together.
+
+12. **Share duplicated rules.** Search for existing implementations of the rule being added or changed. Apply one concrete correction to the examples you find. If the same requirement demands the same correction in each location, reuse the existing owner or consolidate the rule. If each location follows a different contract, similar syntax alone is insufficient reason to couple them.
+
+13. **Make side effects and failures predictable.** Trace a changed operation from a caller through its writes or I/O. Follow a relevant failure back to the caller. Compare the resulting state, returned error, and recovery options with the contract and repository convention. Flag a hidden write, partial update, or lost error detail when it changes what the caller can safely do.
+
+14. **Test observable behaviour.** For each changed acceptance criterion, identify the test or validation step that exercises it through a supported entry point. Name a plausible regression and the specific assertion or observation that would catch it. Check that the test name, setup, and expected result tell the same story, including any consequential failure case. Run the relevant checks and distinguish observed results from predictions.
+
+These checks adapt Robert C. Martin's design and readability guidance. [Solid Relevance](https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html) · [Clean Code, second-edition sample](https://ptgmedia.pearsoncmg.com/images/9780135398579/samplepages/9780135398579_Sample.pdf)
